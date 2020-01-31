@@ -1,5 +1,4 @@
-
-import {COURSES, findLessonsForCourse} from './db-data';
+import { COURSES, findLessonsForCourse } from './db-data';
 
 import * as firebase from 'firebase';
 

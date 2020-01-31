@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve  --proxy-config ./proxy.json",
+    "start": "ng serve  --proxy-config ./proxy.json --port 4000",
     "init-db": "ts-node -P ./init-db.tsconfig.json ./init-db.ts",
     "build:prod": "ng build --prod",
     "firebase-deploy:prod": "firebase deploy",
