@@ -1,0 +1,24 @@
+
+
+.courses-panel {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+
+.page-title {
+  font-family: "Roboto";
+}
+
+
+.top-toolbar {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+.toolbar-btn {
+  margin-left: 15px;
+}

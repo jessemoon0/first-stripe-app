@@ -1,0 +1,40 @@
+
+<div class="courses-panel">
+
+    <div class="top-toolbar">
+
+      <h3 class="page-title">All Courses</h3>
+
+      <button class="toolbar-btn" mat-raised-button color="accent"
+              (click)="subscribeToPlan()" [disabled]="processingOngoing">
+        Subscribe
+      </button>
+
+    </div>
+
+    <mat-tab-group>
+
+        <mat-tab label="Beginners">
+
+            <courses-card-list (courseEdited)="reloadCourses()"
+                    [courses]="beginnersCourses$ | async">
+
+            </courses-card-list>
+
+        </mat-tab>
+
+        <mat-tab label="Advanced">
+
+            <courses-card-list (courseEdited)="reloadCourses()"
+                    [courses]="advancedCourses$ | async"
+
+            ></courses-card-list>
+
+        </mat-tab>
+
+    </mat-tab-group>
+
+
+
+</div>
+
