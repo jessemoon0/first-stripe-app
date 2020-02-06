@@ -3,7 +3,7 @@
 
 import {Injectable} from "@angular/core";
 import {ActivatedRouteSnapshot, Resolve, RouterStateSnapshot} from "@angular/router";
-import {Course} from "../model/course";
+import {Course} from "../interfaces/course";
 import {Observable, of} from 'rxjs';
 import {CoursesService} from './courses.service';
 import {first} from 'rxjs/operators';

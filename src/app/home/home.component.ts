@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import {Course} from '../model/course';
+import {Course} from '../interfaces/course';
 import {Observable} from 'rxjs';
 import {map} from 'rxjs/operators';
 import {CoursesService} from '../services/courses.service';
@@ -37,11 +37,11 @@ export class HomeComponent implements OnInit {
 
         this.beginnersCourses$ = this.courses$.pipe(
             map(courses => courses.filter(
-                course => course.categories.includes("BEGINNER"))));
+              course => course.categories.includes('BEGINNER'))));
 
         this.advancedCourses$ = this.courses$.pipe(
             map(courses => courses.filter(
-                course => course.categories.includes("ADVANCED"))));
+                course => course.categories.includes('ADVANCED'))));
     }
 
 

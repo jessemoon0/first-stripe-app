@@ -1,17 +1,17 @@
-import {Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation} from '@angular/core';
-import {Course} from '../model/course';
-import {MatDialog, MatDialogConfig} from '@angular/material/dialog';
-import {CourseDialogComponent} from '../course-dialog/course-dialog.component';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import {Course} from '../interfaces/course';
+import {MatDialog} from '@angular/material/dialog';
 import {AngularFireAuth} from '@angular/fire/auth';
-import {map} from 'rxjs/operators';
-import {Observable} from 'rxjs';
+import { map, takeUntil } from 'rxjs/operators';
+import { CheckoutService } from '../services/checkout.service';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'courses-card-list',
   templateUrl: './courses-card-list.component.html',
   styleUrls: ['./courses-card-list.component.css']
 })
-export class CoursesCardListComponent implements OnInit {
+export class CoursesCardListComponent implements OnInit, OnDestroy {
 
   @Input()
   courses: Course[];
@@ -22,11 +22,14 @@ export class CoursesCardListComponent implements OnInit {
   isLoggedIn: boolean;
 
   purchaseStarted = false;
+  
+  private destroy$: Subject<void> = new Subject<void>();
 
   constructor(
     private dialog: MatDialog,
-    private afAuth: AngularFireAuth) {
-  }
+    private afAuth: AngularFireAuth,
+    private checkoutService: CheckoutService
+  ) {}
 
   ngOnInit() {
 
@@ -38,10 +41,31 @@ export class CoursesCardListComponent implements OnInit {
 
   }
 
-  purchaseCourse(course: Course, isLoggedIn: boolean) {
-
+  public purchaseCourse(course: Course, isLoggedIn: boolean) {
+    if (!isLoggedIn) {
+      alert('Please login first');
+    }
+    
+    // Avoid creating multiple checkout sessions.
+    this.purchaseStarted = true;
+    this.checkoutService.startCourseCheckoutSession(course.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          console.log('Stripe Checkout Session has been initialized...');
+        },
+        error: (err) => {
+          console.log('Error Creating Stripe Checkout Session');
+          this.purchaseStarted = false;
+        }
+      });
   }
-
+  
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+  
 }
 
 

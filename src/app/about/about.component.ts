@@ -1,8 +1,6 @@
-import {Component, OnInit, ViewEncapsulation} from '@angular/core';
-
-import * as firebase from 'firebase/app';
+import {Component, OnInit} from '@angular/core';
 import 'firebase/firestore';
-import {Course} from '../model/course';
+import {Course} from '../interfaces/course';
 import {AngularFirestore} from '@angular/fire/firestore';
 import {of} from 'rxjs';
 
@@ -33,9 +31,9 @@ export class AboutComponent implements OnInit {
 
         const batch = this.db.firestore.batch();
 
-        batch.update(firebaseCourseRef, {titles: {description:'Firebase Course'}});
+        batch.update(firebaseCourseRef, {titles: {description: 'Firebase Course'}});
 
-        batch.update(rxjsCourseRef, {titles: {description:'RxJs Course'}});
+        batch.update(rxjsCourseRef, {titles: {description: 'RxJs Course'}});
 
         const batch$ = of(batch.commit());
 
@@ -64,7 +62,7 @@ export class AboutComponent implements OnInit {
 
         });
 
-        console.log("result lessons count = ",newCounter);
+        console.log('result lessons count = ', newCounter);
 
     }
 

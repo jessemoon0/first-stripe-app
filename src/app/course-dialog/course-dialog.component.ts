@@ -1,13 +1,10 @@
 import {Component, Inject, OnInit} from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
-import {Course} from "../model/course";
-import {FormBuilder, Validators, FormGroup} from "@angular/forms";
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import {Course} from '../interfaces/course';
+import {FormBuilder, Validators, FormGroup} from '@angular/forms';
 import {CoursesService} from '../services/courses.service';
-import {AngularFirestore} from '@angular/fire/firestore';
 import {AngularFireStorage} from '@angular/fire/storage';
 import {Observable} from 'rxjs';
-import {concatMap, last, tap} from 'rxjs/operators';
-
 
 @Component({
     selector: 'course-dialog',
@@ -17,17 +14,17 @@ import {concatMap, last, tap} from 'rxjs/operators';
 export class CourseDialogComponent implements OnInit {
 
     form: FormGroup;
-    description:string;
+    description: string;
 
     course: Course;
 
-    uploadPercent$ : Observable<number>;
+    uploadPercent$: Observable<number>;
 
 
     constructor(
         private fb: FormBuilder,
         private dialogRef: MatDialogRef<CourseDialogComponent>,
-        @Inject(MAT_DIALOG_DATA) course:Course,
+        @Inject(MAT_DIALOG_DATA) course: Course,
         private coursesService: CoursesService,
         private storage: AngularFireStorage) {
 
@@ -37,7 +34,7 @@ export class CourseDialogComponent implements OnInit {
 
         this.form = fb.group({
             description: [titles.description, Validators.required],
-            longDescription: [titles.longDescription,Validators.required]
+            longDescription: [titles.longDescription, Validators.required]
         });
 
     }
