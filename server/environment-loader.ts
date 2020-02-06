@@ -10,7 +10,8 @@ export class EnvironmentLoader {
     if (dotenvResult.error) {
       throw dotenvResult.error;
     }
-  
-    console.log(dotenvResult.parsed);
+    
+    // Show that keys work
+    // console.log(dotenvResult.parsed);
   }
 }
