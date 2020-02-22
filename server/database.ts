@@ -7,7 +7,7 @@ export const db = new Firestore({
   keyFileName: serviceAccountPath
 });
 
-export async function getDocData(docPath) {
+export async function getDocData(docPath: string) {
   const snapshot = await db.doc(docPath).get();
 
   return snapshot.data();

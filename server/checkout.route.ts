@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { getDocData } from './database';
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
@@ -19,7 +20,10 @@ export async function createCheckoutSession(req: Request, res: Response) {
     let sessionConfig;
 
     if (request.courseId) {
-      sessionConfig = setupPurchaseCourseSession(request);
+      const course = await getDocData(`courses/${request.courseId}`);
+      console.log('Course from DB');
+      console.log(course);
+      sessionConfig = setupPurchaseCourseSession(request, course);
     }
 
     console.log('sessionConfig');
@@ -42,15 +46,15 @@ export async function createCheckoutSession(req: Request, res: Response) {
   }
 }
 
-export function setupPurchaseCourseSession(info: IRequestInfo) {
+export function setupPurchaseCourseSession(info: IRequestInfo, course) {
   const config = setupBaseSessionConfig(info);
-
+  const centsMultiplier = 100;
   // Add our product. Amount has to include the 2 zeros from the cents
   config.line_items = [
     {
-      name: 'Stripe Payments In Practice',
-      description: 'Build your own ecommerce store & membership website with Firebase, Stripe and Express',
-      amount: 5000,
+      name: course.titles.description,
+      description: course.titles.longDescription,
+      amount: course.price * centsMultiplier,
       currency: 'usd',
       quantity: 1
     }
