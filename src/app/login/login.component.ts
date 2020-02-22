@@ -15,7 +15,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     ui: firebaseui.auth.AuthUI;
 
     constructor(private afAuth: AngularFireAuth,
-                private router:Router,
+                private router: Router,
                 private ngZone: NgZone) {
 
     }
@@ -49,7 +49,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     onLoginSuccessful(result) {
 
-        console.log("Firebase UI result:", result);
+        console.log('Firebase UI result:', result);
 
         this.ngZone.run(() => this.router.navigateByUrl('/courses'));
 

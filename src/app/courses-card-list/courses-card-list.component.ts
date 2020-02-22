@@ -5,6 +5,7 @@ import {AngularFireAuth} from '@angular/fire/auth';
 import { map, takeUntil } from 'rxjs/operators';
 import { CheckoutService } from '../services/checkout.service';
 import { Subject } from 'rxjs';
+import { CheckoutSession } from '../interfaces/checkout-session.model';
 
 @Component({
   selector: 'courses-card-list',
@@ -22,7 +23,7 @@ export class CoursesCardListComponent implements OnInit, OnDestroy {
   isLoggedIn: boolean;
 
   purchaseStarted = false;
-  
+
   private destroy$: Subject<void> = new Subject<void>();
 
   constructor(
@@ -45,14 +46,15 @@ export class CoursesCardListComponent implements OnInit, OnDestroy {
     if (!isLoggedIn) {
       alert('Please login first');
     }
-    
+
     // Avoid creating multiple checkout sessions.
     this.purchaseStarted = true;
     this.checkoutService.startCourseCheckoutSession(course.id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: () => {
+        next: (session: CheckoutSession) => {
           console.log('Stripe Checkout Session has been initialized...');
+          this.checkoutService.redirectToCheckoutSession(session);
         },
         error: (err) => {
           console.log('Error Creating Stripe Checkout Session');
@@ -60,12 +62,12 @@ export class CoursesCardListComponent implements OnInit, OnDestroy {
         }
       });
   }
-  
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
-  
+
 }
 
 

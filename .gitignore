@@ -4,7 +4,6 @@
 /dist
 /server/dist
 /server/node_modules
-/server/service-accounts
 /tmp
 /out-tsc
 
@@ -48,3 +47,4 @@ tmp.json
 
 #sensitive
 .env
+/server/service-accounts
