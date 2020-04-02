@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { CheckoutSession } from '../interfaces/checkout-session.model';
+import { AngularFireAuth } from '@angular/fire/auth';
 
 // To use the library on index.html: https://js.stripe.com/v3
 declare const Stripe;
@@ -11,19 +12,23 @@ declare const Stripe;
 })
 export class CheckoutService {
 
-  constructor(private http: HttpClient) { }
+  private jwtAuth: string;
+
+  constructor(private http: HttpClient, private afAuth: AngularFireAuth) {
+    this.afAuth.idToken.subscribe((jwt: string | null) => {
+      this.jwtAuth = jwt;
+    });
+  }
 
   /**
    * Step 1: We start a checkout session with the ID of the product.
    * @param courseId: Id of our product
    */
   public startCourseCheckoutSession(courseId: string): Observable<CheckoutSession> {
-    const body = {
-      courseId,
-      callbackUrl: this.buildCallbackUrl()
-    };
+    const headers = new HttpHeaders().set('Authorization', this.jwtAuth);
+    const body = { courseId, callbackUrl: this.buildCallbackUrl() };
 
-    return this.http.post<CheckoutSession>('/api/checkout', body);
+    return this.http.post<CheckoutSession>('/api/checkout', body, {headers});
   }
 
   /**
