@@ -1,3 +1,5 @@
+import { FirebaseCollectionType } from './enums';
+
 const Firestore = require('@google-cloud/firestore');
 const serviceAccountPath = `./service-accounts/${process.env.SERVICE_ACCOUNT_FILE_NAME}`;
 
@@ -7,7 +9,7 @@ export const db = new Firestore({
   keyFileName: serviceAccountPath
 });
 
-export async function getDocData(docPath: string) {
+export async function getDocData(docPath: FirebaseCollectionType | string): Promise<any> {
   const snapshot = await db.doc(docPath).get();
 
   return snapshot.data();

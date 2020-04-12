@@ -3,6 +3,9 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { CheckoutSession } from '../interfaces/checkout-session.model';
 import { AngularFireAuth } from '@angular/fire/auth';
+import { AngularFirestore } from '@angular/fire/firestore';
+import { CheckoutStatusType, FirebaseCollectionType } from '../../../server/enums';
+import { filter, first } from 'rxjs/operators';
 
 // To use the library on index.html: https://js.stripe.com/v3
 declare const Stripe;
@@ -14,7 +17,11 @@ export class CheckoutService {
 
   private jwtAuth: string;
 
-  constructor(private http: HttpClient, private afAuth: AngularFireAuth) {
+  constructor(
+    private http: HttpClient,
+    private afAuth: AngularFireAuth,
+    private angularFirestore: AngularFirestore
+  ) {
     this.afAuth.idToken.subscribe((jwt: string | null) => {
       this.jwtAuth = jwt;
     });
@@ -45,9 +52,23 @@ export class CheckoutService {
   }
 
   /**
+   * Step 3: After the customer added their card on stripe servers, we now have to wait
+   * on that the transaction is successful in order to show a success screen.
+   * @param ongoingSessionId: The ID of the session that is being completed
+   */
+  public waitForPurchaseCompleted(ongoingSessionId): Observable<any> {
+    return this.angularFirestore.doc<any>(`${FirebaseCollectionType.PurchaseSession}/${ongoingSessionId}`)
+      .valueChanges()
+      .pipe(
+        filter((purchase: any) => purchase.status === CheckoutStatusType.Complete),
+        first()
+      );
+  }
+
+  /**
    * For Stripe to have a callback URL when it finishes
    */
-  private buildCallbackUrl() {
+  private buildCallbackUrl(): string {
     // Protocol: This will be http or https depending on environment
     // Hostname: www.mysite.com
     // Port: 4200 (if provided) --> This happens only in dev.

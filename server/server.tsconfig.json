@@ -6,6 +6,7 @@
     "target": "es2017",
     "lib": ["es2017"],
     "sourceMap": true,
+    "types": ["node"],
     "outDir": "./dist"
   },
   "exclude": ["node_modules", "dist"]

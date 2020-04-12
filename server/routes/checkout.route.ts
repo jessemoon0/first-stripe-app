@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { db, getDocData } from '../database';
 import { Timestamp } from '@google-cloud/firestore';
-import { CheckoutStatusType } from '../enums';
+import { CheckoutStatusType, FirebaseCollectionType } from '../enums';
 import { ICheckoutSessionData } from '../interfaces/checkout-session-data.interface';
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
@@ -22,6 +22,7 @@ export async function createCheckoutSession(req: Request, res: Response) {
     const request: IRequestInfo = {
       courseId: req.body.courseId,
       callbackUrl: req.body.callbackUrl,
+      // Our User ID comes from the auth middleware if we are authenticated in Firebase.
       userId: req['uid']
     };
 
@@ -32,13 +33,17 @@ export async function createCheckoutSession(req: Request, res: Response) {
       return;
     }
 
-    const purchaseSession = await createPurchaseSessionData(request);
+    const purchaseSession: ICheckoutSessionData = await createPurchaseSessionData(request);
+
+    // Get the user for 2nd purchases or subscriptions so multiple products can go under the same user
+    const user = await getDocData(`${FirebaseCollectionType.Users}/${request.userId}`);
 
     let sessionConfig;
 
     if (request.courseId) {
-      const course = await getDocData(`courses/${request.courseId}`);
-      sessionConfig = setupPurchaseCourseSession(request, course, purchaseSession.id);
+      const course = await getDocData(`${FirebaseCollectionType.Courses}/${request.courseId}`);
+      sessionConfig =
+        setupPurchaseCourseSession(request, course, purchaseSession.id, user ? user.stripeCustomerId : undefined);
     }
 
 
@@ -56,8 +61,13 @@ export async function createCheckoutSession(req: Request, res: Response) {
   }
 }
 
-export function setupPurchaseCourseSession(requestInfo: IRequestInfo, course, sessionId: string) {
-  const config = setupBaseSessionConfig(requestInfo, sessionId);
+export function setupPurchaseCourseSession(
+  requestInfo: IRequestInfo,
+  course,
+  sessionId: string,
+  stripeCustomerId: string
+) {
+  const config = setupBaseSessionConfig(requestInfo, sessionId, stripeCustomerId);
   const centsMultiplier = 100;
   // Add our product. Amount has to include the 2 zeros from the cents
   config.line_items = [
@@ -73,13 +83,17 @@ export function setupPurchaseCourseSession(requestInfo: IRequestInfo, course, se
   return config;
 }
 
-export function setupBaseSessionConfig(info: IRequestInfo, sessionId: string) {
+export function setupBaseSessionConfig(info: IRequestInfo, sessionId: string, stripeCustomerId: string) {
   const config: any = {
-    success_url: `${info.callbackUrl}/?purchaseResult=success`,
+    success_url: `${info.callbackUrl}/?purchaseResult=success&ongoingPurchaseSessionId=${sessionId}`,
     cancel_url: `${info.callbackUrl}/?purchaseResult=failed`,
     payment_method_types: ['card'],
     client_reference_id: sessionId
   };
+
+  if (stripeCustomerId) {
+    config.customer = stripeCustomerId;
+  }
 
   return config;
 }
@@ -90,11 +104,12 @@ export function setupBaseSessionConfig(info: IRequestInfo, sessionId: string) {
  * @param course: We want the courseId (which is the product) and the user to be added to the data
  */
 export async function createPurchaseSessionData(course: IRequestInfo) {
-  const purchaseSession = await db.collection('purchaseSession').doc();
+  const purchaseSession = await db.collection(FirebaseCollectionType.PurchaseSession).doc();
 
   const checkoutSessionData: ICheckoutSessionData = {
     status: CheckoutStatusType.Ongoing,
     created: Timestamp.now(),
+    // This is the userId coming from the request
     userId: course.userId
   };
 
