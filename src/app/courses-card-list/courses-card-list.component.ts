@@ -5,7 +5,7 @@ import {AngularFireAuth} from '@angular/fire/auth';
 import { map, takeUntil } from 'rxjs/operators';
 import { CheckoutService } from '../services/checkout.service';
 import { Subject } from 'rxjs';
-import { CheckoutSession } from '../interfaces/checkout-session.model';
+import { CheckoutSession } from '../interfaces/checkout-session.interface';
 
 @Component({
   selector: 'courses-card-list',
