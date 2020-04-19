@@ -2,14 +2,14 @@ import { Request, Response } from 'express';
 import { db, getDocData } from '../database';
 import { Timestamp } from '@google-cloud/firestore';
 import { CheckoutStatusType, FirebaseCollectionType } from '../enums';
-import { ICheckoutSessionData } from '../interfaces/checkout-session-data.interface';
-
+import { ICheckoutSessionData, ICheckoutSessionBaseConfig } from '../interfaces';
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 interface IRequestInfo {
   courseId: string;
   callbackUrl: string;
   userId: string;
+  pricingPlanId: string;
 }
 
 /**
@@ -23,7 +23,9 @@ export async function createCheckoutSession(req: Request, res: Response) {
       courseId: req.body.courseId,
       callbackUrl: req.body.callbackUrl,
       // Our User ID comes from the auth middleware if we are authenticated in Firebase.
-      userId: req['uid']
+      userId: req['uid'],
+      // Subscription Plan ID
+      pricingPlanId: req.body.pricingPlanId
     };
 
     if (!request.userId) {
@@ -38,12 +40,16 @@ export async function createCheckoutSession(req: Request, res: Response) {
     // Get the user for 2nd purchases or subscriptions so multiple products can go under the same user
     const user = await getDocData(`${FirebaseCollectionType.Users}/${request.userId}`);
 
-    let sessionConfig;
+    let sessionConfig: ICheckoutSessionBaseConfig;
+    const stripeCustomerId = user ? user.stripeCustomerId : undefined;
 
     if (request.courseId) {
       const course = await getDocData(`${FirebaseCollectionType.Courses}/${request.courseId}`);
       sessionConfig =
-        setupPurchaseCourseSession(request, course, purchaseSession.id, user ? user.stripeCustomerId : undefined);
+        setupPurchaseCourseSession(request, course, purchaseSession.id, stripeCustomerId );
+    } else if (request.pricingPlanId) {
+      sessionConfig =
+        setupSubscriptionSession(request, request.pricingPlanId, purchaseSession.id, stripeCustomerId);
     }
 
 
@@ -83,8 +89,27 @@ export function setupPurchaseCourseSession(
   return config;
 }
 
-export function setupBaseSessionConfig(info: IRequestInfo, sessionId: string, stripeCustomerId: string) {
-  const config: any = {
+export function setupSubscriptionSession(
+  requestInfo: IRequestInfo,
+  pricingPlanId: string,
+  sessionId: string,
+  stripeCustomerId: string
+) {
+  const config: ICheckoutSessionBaseConfig = setupBaseSessionConfig(requestInfo, sessionId, stripeCustomerId);
+
+  config.subscription_data = {
+    items: [
+      {
+        plan: pricingPlanId
+      }
+    ]
+  };
+
+  return config;
+}
+
+export function setupBaseSessionConfig(info: IRequestInfo, sessionId: string, stripeCustomerId: string): ICheckoutSessionBaseConfig {
+  const config: ICheckoutSessionBaseConfig = {
     success_url: `${info.callbackUrl}/?purchaseResult=success&ongoingPurchaseSessionId=${sessionId}`,
     cancel_url: `${info.callbackUrl}/?purchaseResult=failed`,
     payment_method_types: ['card'],
@@ -115,6 +140,8 @@ export async function createPurchaseSessionData(course: IRequestInfo) {
 
   if (course.courseId) {
     checkoutSessionData.courseId = course.courseId;
+  } else if (course.pricingPlanId) {
+    checkoutSessionData.pricingPlanId = course.courseId;
   }
 
   // Save data in the DB

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { CheckoutSession } from '../interfaces/checkout-session.model';
+import { CheckoutSession } from '../interfaces/checkout-session.interface';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { AngularFirestore } from '@angular/fire/firestore';
 import { CheckoutStatusType, FirebaseCollectionType } from '../../../server/enums';
@@ -63,6 +63,17 @@ export class CheckoutService {
         filter((purchase: any) => purchase.status === CheckoutStatusType.Complete),
         first()
       );
+  }
+
+  /**
+   * We hit the same endpoint as when buying a course but with a pricingPlan instead.
+   * @param pricingPlanId: The Stripe product ID we created that has our subscription plan
+   */
+  public startSubscriptionCheckoutSession(pricingPlanId: string): Observable<CheckoutSession> {
+    const headers = new HttpHeaders().set('Authorization', this.jwtAuth);
+    const body = { pricingPlanId, callbackUrl: this.buildCallbackUrl() };
+
+    return this.http.post<CheckoutSession>('/api/checkout', body, {headers});
   }
 
   /**

@@ -8,4 +8,5 @@ export interface ICheckoutSessionData {
   created: Timestamp;
   userId: string;
   courseId?: string;
+  pricingPlanId?: string;
 }

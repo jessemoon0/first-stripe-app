@@ -3,6 +3,8 @@ import { Course } from '../interfaces/course';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { CoursesService } from '../services/courses.service';
+import { CheckoutService } from '../services/checkout.service';
+import { CheckoutSession } from '../interfaces/checkout-session.interface';
 
 @Component({
     selector: 'home',
@@ -15,7 +17,7 @@ export class HomeComponent implements OnInit {
   public advancedCourses$: Observable<Course[]>;
   public processingOngoing = false;
 
-    constructor(private coursesService: CoursesService) {}
+    constructor(private coursesService: CoursesService, private checkoutService: CheckoutService) {}
 
   public ngOnInit() {
     this.reloadCourses();
@@ -32,7 +34,19 @@ export class HomeComponent implements OnInit {
   }
 
   public subscribeToPlan() {
-    
+    this.processingOngoing = true;
+    // Subscription product configured in Stripe
+    const stripeSubscriptionProductId = 'STRIPE_MONTHLY';
+    this.checkoutService.startSubscriptionCheckoutSession(stripeSubscriptionProductId)
+      .subscribe({
+        next: (checkoutSession: CheckoutSession) => {
+          this.checkoutService.redirectToCheckoutSession(checkoutSession);
+        },
+        error: (err) => {
+          console.log('Error creating checkout session', err);
+          this.processingOngoing = false;
+        }
+      });
   }
 
 }
