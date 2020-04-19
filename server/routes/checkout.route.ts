@@ -141,7 +141,7 @@ export async function createPurchaseSessionData(course: IRequestInfo) {
   if (course.courseId) {
     checkoutSessionData.courseId = course.courseId;
   } else if (course.pricingPlanId) {
-    checkoutSessionData.pricingPlanId = course.courseId;
+    checkoutSessionData.pricingPlanId = course.pricingPlanId;
   }
 
   // Save data in the DB

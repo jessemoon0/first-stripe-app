@@ -36,10 +36,12 @@ export async function stripeWebhooks(req: Request, res: Response) {
 
 async function onCheckoutSessionCompleted(session) {
   const purchaseSessionId = session.client_reference_id;
-  const { courseId, userId } = await getDocData(`${FirebaseCollectionType.PurchaseSession}/${purchaseSessionId}`);
+  const { courseId, userId, pricingPlanId } = await getDocData(`${FirebaseCollectionType.PurchaseSession}/${purchaseSessionId}`);
 
   if (courseId) {
     await fulfillCoursePurchase(userId, courseId, purchaseSessionId, session.customer);
+  } else if (pricingPlanId) {
+    await fulfillSubscriptionPurchase(userId, pricingPlanId, purchaseSessionId, session.customer);
   }
 }
 
@@ -48,6 +50,7 @@ async function onCheckoutSessionCompleted(session) {
  * @param userId: The user belonging to the session
  * @param courseId: The product
  * @param purchaseSessionId: We will need to update the purchase session on the DB as completed
+ * @param stripeCustomerId: Is the ID that is associated to the stripe purchase, we want to store it in out DB for future purchases
  */
 function fulfillCoursePurchase(
   userId: string,
@@ -69,6 +72,24 @@ function fulfillCoursePurchase(
   // merge means that if doesnt exit, create it, otherwise, update it.
   batch.set(userRef, { stripeCustomerId }, { merge: true });
   // Finish the batch operations
+  return batch.commit();
+}
+
+function fulfillSubscriptionPurchase(
+  userId: string,
+  pricingPlanId: string,
+  purchaseSessionId: string,
+  stripeCustomerId: string
+) {
+  const batch = db.batch();
+
+  // Set purchaseSession as complete
+  const purchaseSessionRef = db.doc(`${FirebaseCollectionType.PurchaseSession}/${purchaseSessionId}`);
+  batch.update(purchaseSessionRef, { status: CheckoutStatusType.Complete });
+
+  const userRef = db.doc(`${FirebaseCollectionType.Users}/${userId}`);
+  batch.set(userRef, { pricingPlanId, stripeCustomerId }, { merge: true });
+
   return batch.commit();
 }
 
