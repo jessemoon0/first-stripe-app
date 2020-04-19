@@ -6,7 +6,7 @@ service cloud.firestore {
     }
 
     function isSubscriber(userId) {
-      return "pricingPlanId" in get(/databases/$(database)/documents/users/$(userId)).data.;
+      return "pricingPlanId" in get(/databases/$(database)/documents/users/$(userId)).data;
     }
 
     function isUserWithId(userId) {
