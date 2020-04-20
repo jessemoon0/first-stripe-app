@@ -6,6 +6,7 @@ import { AngularFireAuth } from '@angular/fire/auth';
 import { AngularFirestore } from '@angular/fire/firestore';
 import { CheckoutStatusType, FirebaseCollectionType } from '../../../server/enums';
 import { filter, first } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 // To use the library on index.html: https://js.stripe.com/v3
 declare const Stripe;
@@ -35,7 +36,7 @@ export class CheckoutService {
     const headers = new HttpHeaders().set('Authorization', this.jwtAuth);
     const body = { courseId, callbackUrl: this.buildCallbackUrl() };
 
-    return this.http.post<CheckoutSession>('/api/checkout', body, {headers});
+    return this.http.post<CheckoutSession>(`${environment.api.baseUrl}/api/checkout`, body, {headers});
   }
 
   /**
@@ -73,7 +74,7 @@ export class CheckoutService {
     const headers = new HttpHeaders().set('Authorization', this.jwtAuth);
     const body = { pricingPlanId, callbackUrl: this.buildCallbackUrl() };
 
-    return this.http.post<CheckoutSession>('/api/checkout', body, {headers});
+    return this.http.post<CheckoutSession>(`${environment.api.baseUrl}/api/checkout`, body, {headers});
   }
 
   /**
