@@ -23,6 +23,6 @@ export class AppComponent implements OnInit {
     }
 
     logout() {
-      this.afAuth.auth.signOut();
+      this.afAuth.signOut();
     }
 }
